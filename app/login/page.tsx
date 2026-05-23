@@ -2,6 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ConfigurationEmpty } from "@/components/configuration-empty";
 import { OAuthButtons } from "@/components/oauth-buttons";
+import { enterDemoMode } from "@/lib/actions";
+import { isDemoBypassEnabled, isDemoSession } from "@/lib/demo";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -10,6 +12,7 @@ export default async function LoginPage({
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
+  if (await isDemoSession()) redirect("/home");
   if (!isSupabaseConfigured()) return <ConfigurationEmpty />;
 
   const supabase = await createClient();
@@ -36,7 +39,17 @@ export default async function LoginPage({
           </p>
           {params.error ? <div className="error-box">{params.error}</div> : null}
         </div>
-        <OAuthButtons />
+        <div className="login-actions-panel">
+          <OAuthButtons />
+          {isDemoBypassEnabled() ? (
+            <form action={enterDemoMode} className="demo-bypass-form">
+              <button className="demo-button" type="submit">
+                Continue in demo mode
+              </button>
+              <span>Temporary bypass for testing pages before Google OAuth is enabled.</span>
+            </form>
+          ) : null}
+        </div>
       </section>
     </main>
   );

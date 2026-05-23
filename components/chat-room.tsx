@@ -14,10 +14,12 @@ type Message = {
 };
 
 export function ChatRoom({
+  demoMode = false,
   roomId,
   userId,
   initialMessages
 }: {
+  demoMode?: boolean;
   roomId: string;
   userId: string;
   initialMessages: Message[];
@@ -27,6 +29,8 @@ export function ChatRoom({
   const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
+    if (demoMode) return;
+
     const channel = supabase
       .channel(`room:${roomId}`)
       .on(
@@ -50,11 +54,29 @@ export function ChatRoom({
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [roomId, supabase]);
+  }, [demoMode, roomId, supabase]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const formData = new FormData(event.currentTarget);
+    const body = String(formData.get("body") || "").trim();
+    if (!body) return;
+
+    if (demoMode) {
+      setMessages((current) => [
+        ...current,
+        {
+          id: Date.now(),
+          room_id: roomId,
+          sender_id: userId,
+          body,
+          created_at: new Date().toISOString()
+        }
+      ]);
+      formRef.current?.reset();
+      return;
+    }
+
     await sendMessage(roomId, formData);
     formRef.current?.reset();
   }

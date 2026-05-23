@@ -2,6 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { ChatRoom } from "@/components/chat-room";
 import { ConfigurationEmpty } from "@/components/configuration-empty";
 import { AppShell } from "@/components/app-shell";
+import { demoMessages, demoProfile, demoRooms, isDemoSession } from "@/lib/demo";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
@@ -10,9 +11,30 @@ export default async function RoomPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const { id } = await params;
+  if (await isDemoSession()) {
+    const room = demoRooms.find((item) => item.id === id);
+    if (!room) notFound();
+
+    return (
+      <AppShell name={demoProfile.selected_name}>
+        <header className="page-header chat-page-header">
+          <span className="eyebrow">Demo chat</span>
+          <h1>{room.display_name} room</h1>
+          <p>{room.status === "waiting" ? "Waiting for another namesake to arrive." : "You are connected by name only."}</p>
+        </header>
+        <ChatRoom
+          demoMode
+          initialMessages={demoMessages.filter((message) => message.room_id === id)}
+          roomId={id}
+          userId={demoProfile.id}
+        />
+      </AppShell>
+    );
+  }
+
   if (!isSupabaseConfigured()) return <ConfigurationEmpty />;
 
-  const { id } = await params;
   const supabase = await createClient();
   const {
     data: { user }

@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { matchMe } from "@/lib/actions";
 import { ConfigurationEmpty } from "@/components/configuration-empty";
 import { AppShell } from "@/components/app-shell";
+import { demoProfile, isDemoSession } from "@/lib/demo";
 import { isSupabaseConfigured } from "@/lib/env";
 import { normalizeName } from "@/lib/name";
 import { createClient } from "@/lib/supabase/server";
@@ -11,6 +12,35 @@ export default async function MatchesPage({
 }: {
   searchParams: Promise<{ error?: string }>;
 }) {
+  if (await isDemoSession()) {
+    const profile = demoProfile;
+
+    return (
+      <AppShell name={profile.selected_name}>
+        <header className="page-header">
+          <span className="eyebrow">Demo Matching</span>
+          <h1>Find another {profile.selected_name}.</h1>
+          <p>Namer will place you with someone using the same selected name.</p>
+        </header>
+
+        <section className="match-stage">
+          <div className="cinema-ring">
+            <span>{profile.selected_name.slice(0, 1).toUpperCase()}</span>
+          </div>
+          <div>
+            <h2>1 demo room ready</h2>
+            <p>Matched on {profile.selected_part.toLowerCase()} only.</p>
+            <form action={matchMe}>
+              <button className="primary-button" type="submit">
+                Match me now
+              </button>
+            </form>
+          </div>
+        </section>
+      </AppShell>
+    );
+  }
+
   if (!isSupabaseConfigured()) return <ConfigurationEmpty />;
 
   const supabase = await createClient();

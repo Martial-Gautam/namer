@@ -2,10 +2,33 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ConfigurationEmpty } from "@/components/configuration-empty";
 import { AppShell } from "@/components/app-shell";
+import { demoProfile, demoRooms, isDemoSession } from "@/lib/demo";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function RoomsPage() {
+  if (await isDemoSession()) {
+    return (
+      <AppShell name={demoProfile.selected_name}>
+        <header className="page-header">
+          <span className="eyebrow">Demo Chats</span>
+          <h1>Your anonymous rooms.</h1>
+          <p>Continue conversations that only know your chosen name.</p>
+        </header>
+
+        <section className="room-list">
+          {demoRooms.map((room) => (
+            <Link className="room-row" href={`/rooms/${room.id}`} key={room.id}>
+              <span>{room.display_name}</span>
+              <strong>{room.status === "waiting" ? "Waiting for namesake" : "Active chat"}</strong>
+              <small>{new Date(room.created_at).toLocaleDateString()}</small>
+            </Link>
+          ))}
+        </section>
+      </AppShell>
+    );
+  }
+
   if (!isSupabaseConfigured()) return <ConfigurationEmpty />;
 
   const supabase = await createClient();

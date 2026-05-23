@@ -137,7 +137,7 @@ button {
   margin: 0;
 }
 
-.oauth-grid {
+.login-actions-panel {
   display: grid;
   align-content: center;
   gap: 10px;
@@ -146,10 +146,16 @@ button {
   background: rgba(255, 255, 255, 0.035);
 }
 
+.oauth-grid {
+  display: grid;
+  gap: 10px;
+}
+
 .oauth-button,
 .provider-icon,
 .primary-button,
 .primary-link,
+.demo-button,
 .send-button,
 .sidebar-footer button {
   display: grid;
@@ -194,12 +200,32 @@ button {
 }
 
 .oauth-note,
+.demo-bypass-form,
 .error-box {
   padding: 12px;
   border: 1px solid var(--line);
   border-radius: 8px;
   background: rgba(0, 0, 0, 0.28);
   font-size: 0.86rem;
+}
+
+.demo-bypass-form {
+  display: grid;
+  gap: 10px;
+}
+
+.demo-bypass-form span {
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+.demo-button {
+  min-height: 46px;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--white);
+  font-weight: 850;
 }
 
 .error-box {
@@ -620,7 +646,7 @@ button {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
-  .oauth-grid {
+  .login-actions-panel {
     border-left: 0;
     border-top: 1px solid var(--line);
   }

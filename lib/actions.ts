@@ -2,10 +2,24 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { headers } from "next/headers";
+import { cookies, headers } from "next/headers";
 import type { Provider } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/server";
+import { isDemoBypassEnabled } from "@/lib/demo";
 import { nameFromMetadata, normalizeName, splitName } from "@/lib/name";
+
+export async function enterDemoMode() {
+  if (!isDemoBypassEnabled()) redirect("/login");
+
+  (await cookies()).set("namer_demo", "1", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/"
+  });
+
+  redirect("/home");
+}
 
 export async function signInWithProvider(provider: string) {
   const supabase = await createClient();
@@ -23,6 +37,10 @@ export async function signInWithProvider(provider: string) {
 }
 
 export async function signOut() {
+  if (isDemoBypassEnabled()) {
+    (await cookies()).delete("namer_demo");
+  }
+
   const supabase = await createClient();
   await supabase.auth.signOut();
   redirect("/login");
@@ -63,6 +81,10 @@ export async function saveSelectedName(formData: FormData) {
 }
 
 export async function matchMe() {
+  if (isDemoBypassEnabled() && (await cookies()).get("namer_demo")?.value === "1") {
+    redirect("/rooms/demo-ranveer-room");
+  }
+
   const supabase = await createClient();
   const {
     data: { user }
@@ -134,6 +156,11 @@ export async function matchMe() {
 export async function sendMessage(roomId: string, formData: FormData) {
   const body = String(formData.get("body") || "").trim();
   if (!body) return;
+
+  if (isDemoBypassEnabled() && (await cookies()).get("namer_demo")?.value === "1") {
+    revalidatePath(`/rooms/${roomId}`);
+    return;
+  }
 
   const supabase = await createClient();
   const {

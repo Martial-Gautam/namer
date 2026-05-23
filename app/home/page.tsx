@@ -2,10 +2,61 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ConfigurationEmpty } from "@/components/configuration-empty";
 import { AppShell } from "@/components/app-shell";
+import { demoProfile, isDemoSession } from "@/lib/demo";
 import { isSupabaseConfigured } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 
 export default async function HomePage() {
+  if (await isDemoSession()) {
+    const profile = demoProfile;
+
+    return (
+      <AppShell name={profile.selected_name}>
+        <header className="page-header">
+          <span className="eyebrow">Demo Home</span>
+          <h1>{profile.selected_name} meets {profile.selected_name}.</h1>
+          <p>Your public identity inside Namer is only your chosen {profile.selected_part.toLowerCase()}.</p>
+        </header>
+
+        <section className="dashboard-grid">
+          <Link className="action-card primary-card" href="/matches">
+            <span>Start matching</span>
+            <strong>Find a namesake</strong>
+            <p>Preview the matching flow with demo data.</p>
+          </Link>
+          <Link className="action-card" href="/rooms">
+            <span>Chats</span>
+            <strong>2 rooms</strong>
+            <p>Continue a demo conversation without OAuth.</p>
+          </Link>
+          <Link className="action-card" href="/profile">
+            <span>Profile</span>
+            <strong>{profile.full_name}</strong>
+            <p>Review the selected name part used for matching.</p>
+          </Link>
+        </section>
+
+        <section className="feed-panel">
+          <h2>Today on Namer</h2>
+          <div className="feed-list">
+            <article>
+              <span>Demo rule</span>
+              <p>This bypass is controlled by `NAMER_DEV_BYPASS` and a local cookie.</p>
+            </article>
+            <article>
+              <span>Matching rule</span>
+              <p>Rooms are formed by normalized names, such as ranveer, sakshi, or aarav.</p>
+            </article>
+            <article>
+              <span>Chat rule</span>
+              <p>Real mode stores messages in Supabase and streams them with Realtime.</p>
+            </article>
+          </div>
+        </section>
+      </AppShell>
+    );
+  }
+
   if (!isSupabaseConfigured()) return <ConfigurationEmpty />;
 
   const supabase = await createClient();
